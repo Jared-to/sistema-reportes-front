@@ -212,21 +212,6 @@ export const ModalActivacion = ({
           </RadioGroup>
         </FormControl>
 
-        {/* Advertencia */}
-        <Box
-          sx={{
-            mt: 3,
-            p: 2,
-            borderRadius: 2,
-            backgroundColor: 'rgba(255, 152, 0, 0.1)',
-            border: '1px solid rgba(255, 152, 0, 0.3)'
-          }}
-        >
-          <Typography variant="body2" sx={{ color: '#ff9800', display: 'flex', alignItems: 'center' }}>
-            <WarningIcon sx={{ mr: 1, fontSize: '1rem' }} />
-            Advertencia: El cambio de línea puede afectar temporalmente el funcionamiento del equipo.
-          </Typography>
-        </Box>
       </DialogContent>
 
       <DialogActions sx={{ p: 3, borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>

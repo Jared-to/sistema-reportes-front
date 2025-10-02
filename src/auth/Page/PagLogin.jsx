@@ -102,12 +102,6 @@ const PagLogin = () => {
           >
             MagnetCare System
           </Typography>
-          <Typography
-            variant="body1"
-            sx={{ color: "#94A3B8", fontSize: '0.95rem' }}
-          >
-            Sistema de acceso seguro
-          </Typography>
         </Box>
 
         {/* Login Form */}

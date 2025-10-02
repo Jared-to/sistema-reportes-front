@@ -4,13 +4,16 @@ import { useSelector } from 'react-redux';
 
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import SettingsSuggestOutlinedIcon from '@mui/icons-material/SettingsSuggestOutlined';
+import PersonIcon from '@mui/icons-material/Person';
 
 import { useAuthStore } from '../../../../hooks/useAuthStore';
+import { useNavigate } from 'react-router-dom';
 
 export const MenuUser = () => {
   //?estados
   const [anchorEl, setAnchorEl] = useState(null);
   const { starLogout } = useAuthStore();
+  const navigate = useNavigate()
   const { user } = useSelector((state) => state.auth);
   //?funciones
   //menu
@@ -88,6 +91,24 @@ export const MenuUser = () => {
           </Typography>
           <Divider sx={{ my: 1 }} />
           <Box mt={2}>
+            {
+              user.rol === 'admin' &&
+              <MenuItem
+                onClick={() => navigate('/user/usuarios')}
+                sx={{
+                  '&:hover': { backgroundColor: '#ececec' },
+                  color: 'inherit',
+                  borderRadius: '4px',
+                  transition: 'background-color 0.3s ease',
+                  fontSize: '0.85rem',
+                  padding: '6px 12px',
+                }}
+              >
+                <ListItemIcon>
+                  <PersonIcon sx={{ fontSize: '1rem' }} />
+                </ListItemIcon>
+                <Typography variant="inherit">Usuarios</Typography>
+              </MenuItem>}
             {/* Logout */}
             <MenuItem
               onClick={handleLogout}
