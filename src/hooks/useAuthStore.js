@@ -79,6 +79,8 @@ export const useAuthStore = () => {
     sessionStorage.removeItem('userId');
     sessionStorage.removeItem('email');
     sessionStorage.removeItem('token');
+    sessionStorage.removeItem('welcomeModalShown');
+
 
     dispatch(onLogout());
   }

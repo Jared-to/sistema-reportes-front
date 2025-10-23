@@ -6,6 +6,7 @@ import { Navbar } from "./navbar/Navbar"
 import { PagHome } from "./pages/home/PagHome"
 import { PagEquipoInfo } from "./pages/equipo-info/PagEquipoInfo"
 import { PagUsuarios } from "./pages/usuarios/PagUsuarios"
+import { PagCurvaInfo } from "./pages/curvas-info/PagCurvaInfo"
 
 
 export const RoutesUser = () => {
@@ -19,6 +20,8 @@ export const RoutesUser = () => {
           <RoutesProtected element={<PagUsuarios />} allowedRoles={['admin']} />
         } />
         <Route path="/equipment/:institucion/:resonador" element={<PagEquipoInfo />} />
+        <Route path="/equipment/:institucion/:resonador/curvas" element={<PagCurvaInfo />} />
+
       </Routes>
     </Navbar>
   )

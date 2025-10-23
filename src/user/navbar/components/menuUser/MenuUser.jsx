@@ -56,9 +56,6 @@ export const MenuUser = () => {
             },
           }}
         >
-          <Avatar
-            src={user.foto}
-            sx={{ boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', width: 35, height: 35, }} />
           <SettingsSuggestOutlinedIcon className="icon" sx={{ color: '#2194f0', fontSize: '1.8rem', ml: 1, '&:hover': { color: 'white' } }} />
         </Box>
       </ButtonBase>

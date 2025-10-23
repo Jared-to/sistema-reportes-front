@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -7,22 +8,17 @@ import {
   Button,
   Chip,
   Paper,
-  Container,
-  Stack,
-  alpha
 } from "@mui/material";
-import { useEffect, useState } from "react";
 import InfoIcon from '@mui/icons-material/Info';
 import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
 import DevicesIcon from '@mui/icons-material/Devices';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import SecurityIcon from '@mui/icons-material/Security';
-import WelcomeIcon from '@mui/icons-material/EmojiPeople';
-import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
-import AnalyticsIcon from '@mui/icons-material/Analytics';
+
+
 import { useNavigate } from "react-router-dom";
 import { useSensoresStore } from "../../../hooks/useSensoresStore";
-import { useSelector } from "react-redux";
+import { WelcomeModal } from "./components/WelcomeModal";
 
 // Componente de tarjeta de equipo
 const EquipmentCard = ({ equipment, onDetailsClick }) => {
@@ -126,119 +122,6 @@ const EquipmentCard = ({ equipment, onDetailsClick }) => {
   );
 };
 
-// Componente de tarjeta de característica
-const FeatureCard = ({ icon, title, description }) => {
-  return (
-    <Paper
-      sx={{
-        p: 3,
-        height: '100%',
-        bgcolor: 'rgba(255, 255, 255, 0.03)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        transition: 'transform 0.2s',
-      }}
-    >
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-        <Box sx={{
-          p: 2,
-          mb: 2,
-          borderRadius: '50%',
-          bgcolor: 'primary.main',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: 60,
-          height: 60
-        }}>
-          {icon}
-        </Box>
-        <Typography variant="h6" color="white" gutterBottom>
-          {title}
-        </Typography>
-        <Typography variant="body2" color="rgba(255, 255, 255, 0.7)">
-          {description}
-        </Typography>
-      </Box>
-    </Paper>
-  );
-};
-
-// Componente de mensaje de bienvenida
-const WelcomeMessage = ({ equipmentCount }) => {
-  const { user } = useSelector(state => state.auth)
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "¡Buenos días!";
-    if (hour < 18) return "¡Buenas tardes!";
-    return "¡Buenas noches!";
-  };
-
-  return (
-    <Paper
-      sx={{
-        p: 4,
-        mb: 4,
-        background: 'linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(33, 203, 243, 0.1) 100%)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(33, 150, 243, 0.2)',
-        borderRadius: 3,
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-        <Box sx={{
-          p: 2,
-          borderRadius: '50%',
-          background: 'linear-gradient(45deg, #2196f3 30%, #21cbf3 90%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: 80,
-          height: 80
-        }}>
-          <WelcomeIcon sx={{ fontSize: 40, color: 'white' }} />
-        </Box>
-
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h4" component="h1" color="white" fontWeight="bold" gutterBottom>
-            {getGreeting()} {user?.name || 'N/A'}
-          </Typography>
-          <Typography variant="h6" color="rgba(255, 255, 255, 0.9)" sx={{ mb: 1 }}>
-            Bienvenido al Sistema de Monitoreo de Resonadores Magnéticos
-          </Typography>
-          <Typography variant="body1" color="rgba(255, 255, 255, 0.7)">
-            {equipmentCount > 0
-              ? `Actualmente estás monitoreando ${equipmentCount} equipo${equipmentCount !== 1 ? 's' : ''}.`
-              : 'No hay equipos activos para monitorear en este momento.'
-            }
-          </Typography>
-        </Box>
-      </Box>
-
-      {/* Elementos decorativos */}
-      <Box sx={{
-        position: 'absolute',
-        top: -20,
-        right: -20,
-        width: 120,
-        height: 120,
-        borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(33, 150, 243, 0.1) 0%, transparent 70%)',
-      }} />
-      <Box sx={{
-        position: 'absolute',
-        bottom: -30,
-        left: -30,
-        width: 100,
-        height: 100,
-        borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(33, 203, 243, 0.1) 0%, transparent 70%)',
-      }} />
-    </Paper>
-  );
-};
 
 export const PagHome = () => {
   const { getEquipos } = useSensoresStore();
@@ -262,94 +145,65 @@ export const PagHome = () => {
       py: 4,
       background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
     }}>
-      <Container maxWidth="xl">
-        {/* Mensaje de Bienvenida */}
-        <WelcomeMessage equipmentCount={equipmentData.length} />
+      <WelcomeModal />
+      {/* Header Section */}
+      <Box sx={{ textAlign: 'center', mb: 6 }}>
+        <Typography
+          variant="h2"
+          component="h1"
+          gutterBottom
+          sx={{
+            fontWeight: 'bold',
+            background: 'linear-gradient(45deg, #2196f3 30%, #21cbf3 90%)',
+            backgroundClip: 'text',
+            textFillColor: 'transparent',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            mb: 2
+          }}
+        >
+          Sistema de Monitoreo de Resonadores
+        </Typography>
+      </Box>
 
-        {/* Header Section */}
-        <Box sx={{ textAlign: 'center', mb: 6 }}>
-          <Typography
-            variant="h2"
-            component="h1"
-            gutterBottom
-            sx={{
-              fontWeight: 'bold',
-              background: 'linear-gradient(45deg, #2196f3 30%, #21cbf3 90%)',
-              backgroundClip: 'text',
-              textFillColor: 'transparent',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              mb: 2
-            }}
-          >
-            Sistema de Monitoreo de Resonadores
+      {/* Equipment Section */}
+      <Box display={'flex'} flexDirection={'column'} alignContent={'center'} alignItems={'center'}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+          <DevicesIcon sx={{ mr: 2, fontSize: 32, color: '#2196f3' }} />
+          <Typography variant="h4" component="h2" sx={{ fontWeight: 'medium' }}>
+            Equipos Monitoreados
           </Typography>
         </Box>
 
-        {/* Equipment Section */}
-        <Box display={'flex'} flexDirection={'column'} alignContent={'center'} alignItems={'center'}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-            <DevicesIcon sx={{ mr: 2, fontSize: 32, color: '#2196f3' }} />
-            <Typography variant="h4" component="h2" sx={{ fontWeight: 'medium' }}>
-              Equipos Monitoreados
+        {equipmentData.length === 0 ? (
+          <Paper sx={{
+            p: 4,
+            textAlign: 'center',
+            bgcolor: 'rgba(255, 255, 255, 0.03)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: 3,
+            width: '100%'
+          }}>
+            <Typography variant="h6" color="rgba(255, 255, 255, 0.7)" gutterBottom>
+              No hay equipos disponibles
             </Typography>
-          </Box>
-
-          {equipmentData.length === 0 ? (
-            <Paper sx={{
-              p: 4,
-              textAlign: 'center',
-              bgcolor: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: 3,
-              maxWidth: 500,
-              width: '100%'
-            }}>
-              <Typography variant="h6" color="rgba(255, 255, 255, 0.7)" gutterBottom>
-                No hay equipos disponibles
-              </Typography>
-              <Typography variant="body2" color="rgba(255, 255, 255, 0.5)">
-                Los equipos aparecerán aquí una vez que se carguen los datos del sistema.
-              </Typography>
-            </Paper>
-          ) : (
-            <Grid container spacing={3}>
-              {equipmentData.map(equipment => (
-                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }} key={equipment.id}>
-                  <EquipmentCard
-                    equipment={equipment}
-                    onDetailsClick={() => navigate(`equipment/${equipment.institucion}/${equipment.resonador_id}`)}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-          )}
-        </Box>
-
-        {/* Features Section */}
-        <Box sx={{ mt: 8 }}>
-          <Typography variant="h4" component="h2" align="center" gutterBottom sx={{ fontWeight: 'medium', mb: 4 }}>
-            Características Principales
-          </Typography>
-          <Grid container spacing={3} display={'flex'} justifyContent={'center'}>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <FeatureCard
-                icon={<AnalyticsIcon sx={{ fontSize: 30, color: 'white' }} />}
-                title="Análisis de Tendencia"
-                description="Visualiza el historial completo de cada variable con gráficos interactivos y filtros por período."
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <FeatureCard
-                icon={<NotificationsActiveIcon sx={{ fontSize: 30, color: 'white' }} />}
-                title="Alertas Inteligentes"
-                description="Sistema de notificaciones proactivo que alerta sobre anomalías y condiciones fuera de rango."
-              />
-            </Grid>
+            <Typography variant="body2" color="rgba(255, 255, 255, 0.5)">
+              Los equipos aparecerán aquí una vez que se carguen los datos del sistema.
+            </Typography>
+          </Paper>
+        ) : (
+          <Grid container spacing={2}>
+            {equipmentData.map(equipment => (
+              <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6, xl: 4 }} key={equipment.id}>
+                <EquipmentCard
+                  equipment={equipment}
+                  onDetailsClick={() => navigate(`equipment/${equipment.institucion}/${equipment.resonador_id}`)}
+                />
+              </Grid>
+            ))}
           </Grid>
-        </Box>
-
-      </Container>
+        )}
+      </Box>
     </Box>
   );
 };

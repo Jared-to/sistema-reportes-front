@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom";
 
 export const MenuSuperior = () => {
   return (
-    <Box sx={{ ml: 8, display: 'flex', gap: 2 }}>
+    <Box sx={{  display: 'flex', gap: 2,}}>
       <NavItem to="/" label="Inicio" />
       {/* <NavItem to="equipos" label="Equipos" /> */}
     </Box>
