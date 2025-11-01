@@ -37,6 +37,19 @@ export const PagEquipoInfo = () => {
   const [loading, setLoading] = useState(true);
   const [modalActivacion, setModalActivacion] = useState(false);
 
+    // Obtener el último registro para mostrar los valores actuales
+  const getUltimoRegistro = () => {
+    if (!registrosData || registrosData.length === 0) return null;
+    
+    // Ordenar por fecha_hora descendente y tomar el primero
+    const registrosOrdenados = [...registrosData].sort((a, b) => 
+      new Date(b.fecha_hora) - new Date(a.fecha_hora)
+    );
+    
+    return registrosOrdenados[0];
+  };
+
+  const ultimoRegistro = getUltimoRegistro();
   // Obtener datos del equipo y registros
   const handleGetData = async () => {
     setLoading(true);
@@ -250,9 +263,10 @@ export const PagEquipoInfo = () => {
   const selectedMetricData = getSelectedMetricData();
   const selectedTempMetricData = getSelectedTempMetricData();
 
+  
   return (
     <Box sx={{ color: 'white' }}>
-      <Box display={'flex'} justifyContent={'right'} flexDirection={{xs:'column',md:'row'}} mb={3} gap={2}>
+      <Box display={'flex'} justifyContent={'right'} flexDirection={{ xs: 'column', md: 'row' }} mb={3} gap={2}>
         <Button
           onClick={() => navigate(-1)}
           variant="contained"
@@ -277,7 +291,7 @@ export const PagEquipoInfo = () => {
           Activacion Remota
         </Button>
         <Button
-          onClick={()=>navigate('curvas')}
+          onClick={() => navigate('curvas')}
           variant="outlined"
           sx={{
             borderRadius: 2,
@@ -339,8 +353,8 @@ export const PagEquipoInfo = () => {
                 Estado Chiller
               </Typography>
               <Chip
-                label={equipoData.linea_principal === 1 ? "ON" : "OFF"}
-                color={equipoData.linea_principal === 1 ? "success" : "warning"}
+                label={ultimoRegistro.linea_principal === 1 ? "ON" : "OFF"}
+                color={ultimoRegistro.linea_principal === 1 ? "success" : "warning"}
                 size="small"
                 sx={{ my: 0.5 }}
               />
@@ -348,8 +362,8 @@ export const PagEquipoInfo = () => {
                 Estado Compresor
               </Typography>
               <Chip
-                label={equipoData.linea_principal === 1 ? "ON" : "OFF"}
-                color={equipoData.linea_principal === 1 ? "success" : "warning"}
+                label={ultimoRegistro.linea_principal === 1 ? "ON" : "OFF"}
+                color={ultimoRegistro.linea_principal === 1 ? "success" : "warning"}
                 size="small"
                 sx={{ my: 0.5 }}
               />
@@ -364,13 +378,13 @@ export const PagEquipoInfo = () => {
                 Flujo Chiller - Compresor
               </Typography>
               <Typography fontWeight={800}>
-                {equipoData.flujo_chiller} L/min
+                {ultimoRegistro.flujo_chiller} L/min
               </Typography>
               <Typography>
                 Temp. Linea Chiller
               </Typography>
               <Typography fontWeight={800}>
-                {equipoData.temp_linea_chiller} °C
+                {ultimoRegistro.temp_linea_chiller} °C
               </Typography>
             </Box>
           </Grid>
@@ -383,13 +397,13 @@ export const PagEquipoInfo = () => {
                 Flujo Linea Auxiliar
               </Typography>
               <Typography fontWeight={800}>
-                {equipoData.flujo_linea_aux} L/min
+                {ultimoRegistro.flujo_linea_aux} L/min
               </Typography>
               <Typography>
                 Temp. Linea Auxiliar
               </Typography>
               <Typography fontWeight={800}>
-                {equipoData.temp_linea_aux} °C
+                {ultimoRegistro.temp_linea_aux} °C
               </Typography>
             </Box>
           </Grid>
@@ -402,13 +416,13 @@ export const PagEquipoInfo = () => {
                 Consumo Corriente Chiller
               </Typography>
               <Typography fontWeight={800}>
-                {equipoData.corriente_chiller} A
+                {ultimoRegistro.corriente_chiller} A
               </Typography>
               <Typography>
                 Consumo Corriente Compresor
               </Typography>
               <Typography fontWeight={800}>
-                {equipoData.corriente_compresor} A
+                {ultimoRegistro.corriente_compresor} A
               </Typography>
             </Box>
           </Grid>
@@ -421,8 +435,8 @@ export const PagEquipoInfo = () => {
                 Linea Principal
               </Typography>
               <Chip
-                label={equipoData.linea_principal === 1 ? "ON" : "OFF"}
-                color={equipoData.linea_principal === 1 ? "success" : "warning"}
+                label={ultimoRegistro.linea_principal === 1 ? "ON" : "OFF"}
+                color={ultimoRegistro.linea_principal === 1 ? "success" : "warning"}
                 size="small"
                 sx={{ my: 0.5 }}
               />
@@ -430,8 +444,8 @@ export const PagEquipoInfo = () => {
                 Linea Auxiliar
               </Typography>
               <Chip
-                label={equipoData.linea_aux === 1 ? "ON" : "OFF"}
-                color={equipoData.linea_aux === 1 ? "success" : "warning"}
+                label={ultimoRegistro.linea_aux === 1 ? "ON" : "OFF"}
+                color={ultimoRegistro.linea_aux === 1 ? "success" : "warning"}
                 size="small"
                 sx={{ my: 0.5 }}
               />
@@ -439,6 +453,119 @@ export const PagEquipoInfo = () => {
           </Grid>
         </Grid>
       </Box>
+
+
+      {/* Grid de Gráficas Individuales */}
+      <Grid container spacing={3}>
+        {/* CORREGIDO: Nombres de archivo específicos para cada gráfica */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <ChartComponent
+            title="CURVA TEMPERATURA 1 (CHILLER - COMPRESOR)"
+            data={[processedData.temp_linea_chiller]}
+            xAxisData={processedData.timestamps}
+            yAxisName="Temperatura (°C)"
+            seriesNames={['Temp. Chiller']}
+            colors={['#ff6b6b']}
+            exportData={prepareExportData(processedData, 'temperatura_chiller', ['Temperatura Chiller (°C)'])}
+            exportFilename={`Temperatura_Chiller_${resonador}`}
+          />
+        </Grid>
+
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <ChartComponent
+            title="CURVA TEMPERATURA 2 (AUXILIAR - COMPRESOR)"
+            data={[processedData.temp_linea_aux]}
+            xAxisData={processedData.timestamps}
+            yAxisName="Temperatura (°C)"
+            seriesNames={['Temp. Línea Aux']}
+            colors={['#6a0572']}
+            exportData={prepareExportData(processedData, 'temperatura_aux', ['Temperatura Auxiliar (°C)'])}
+            exportFilename={`Temperatura_Auxiliar_${resonador}`}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <ChartComponent
+            title="CURVA FLUJO 1 (CHILLER - COMPRESOR)"
+            data={[processedData.flujo_chiller]}
+            xAxisData={processedData.timestamps}
+            yAxisName="Flujo (L/min)"
+            seriesNames={['Flujo Chiller']}
+            colors={['#4ecdc4']}
+            exportData={prepareExportData(processedData, 'flujo_chiller', ['Flujo Chiller (L/min)'])}
+            exportFilename={`Flujo_Chiller_${resonador}`}
+          />
+        </Grid>
+
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <ChartComponent
+            title="CURVA FLUJO 2 (AUXILIAR - COMPRESOR)"
+            data={[processedData.flujo_linea_aux]}
+            xAxisData={processedData.timestamps}
+            yAxisName="Flujo (L/min)"
+            seriesNames={['Flujo Línea Aux']}
+            colors={['#1a936f']}
+            exportData={prepareExportData(processedData, 'flujo_aux', ['Flujo Auxiliar (L/min)'])}
+            exportFilename={`Flujo_Auxiliar_${resonador}`}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <ChartComponent
+            title="CURVA SENSOR CORRIENTE CHILLER"
+            data={[processedData.corriente_chiller]}
+            xAxisData={processedData.timestamps}
+            yAxisName="Corriente (A)"
+            seriesNames={['Corriente Chiller']}
+            colors={['#ffe66d']}
+            exportData={prepareExportData(processedData, 'corriente_chiller', ['Corriente Chiller (A)'])}
+            exportFilename={`Corriente_Chiller_${resonador}`}
+          />
+        </Grid>
+
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <ChartComponent
+            title="CURVA SENSOR CORRIENTE COMPRESOR"
+            data={[processedData.corriente_compresor]}
+            xAxisData={processedData.timestamps}
+            yAxisName="Corriente (A)"
+            seriesNames={['Corriente Compresor']}
+            colors={['#3d5a80']}
+            exportData={prepareExportData(processedData, 'corriente_compresor', ['Corriente Compresor (A)'])}
+            exportFilename={`Corriente_Compresor_${resonador}`}
+          />
+        </Grid>
+
+        {/* Gráficas sin exportación (opcional) */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <ChartComponent
+            title="CURVA FUNCIONALIDAD ESTADO LINEA PRINCIPAL"
+            data={[processedData.estado_linea_principal]}
+            xAxisData={processedData.timestamps}
+            yAxisName="Estado (0/1)"
+            seriesNames={['Línea Principal']}
+            colors={['#9c27b0']}
+            exportData={prepareExportData(processedData, 'estado_principal', ['Estado Línea Principal'])}
+            exportFilename={`Estado_Principal_${resonador}`}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <ChartComponent
+            title="CURVA FUNCIONALIDAD ESTADO LINEA AUXILIAR"
+            data={[processedData.estado_linea_aux]}
+            xAxisData={processedData.timestamps}
+            yAxisName="Estado (0/1)"
+            seriesNames={['Línea Auxiliar']}
+            colors={['#f50057']}
+            exportData={prepareExportData(processedData, 'estado_auxiliar', ['Estado Línea Auxiliar'])}
+            exportFilename={`Estado_Auxiliar_${resonador}`}
+          />
+        </Grid>
+      </Grid>
 
       {/* Gráficas con selectores */}
       <Box mb={3}>
@@ -497,7 +624,6 @@ export const PagEquipoInfo = () => {
                 <MenuItem value="temp_linea_chiller">Temperatura Agua Chiller a Compresor</MenuItem>
                 <MenuItem value="temp_linea_aux">Temperatura Agua Auxiliar a Compresor</MenuItem>
                 <MenuItem value="comparativa_temperaturas">Comparativa de Temperaturas</MenuItem>
-                <MenuItem value="diferencia_temperaturas">Diferencia de Temperaturas</MenuItem>
               </Select>
             </FormControl>
           </Box>
@@ -514,114 +640,6 @@ export const PagEquipoInfo = () => {
         </Paper>
       </Box>
 
-      {/* Grid de Gráficas Individuales */}
-      <Grid container spacing={3}>
-        {/* CORREGIDO: Nombres de archivo específicos para cada gráfica */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <ChartComponent
-            title="CURVA TEMPERATURA 1 (CHILLER - COMPRESOR)"
-            data={[processedData.temp_linea_chiller]}
-            xAxisData={processedData.timestamps}
-            yAxisName="Temperatura (°C)"
-            seriesNames={['Temp. Chiller']}
-            colors={['#ff6b6b']}
-            exportData={prepareExportData(processedData, 'temperatura_chiller', ['Temperatura Chiller (°C)'])}
-            exportFilename={`Temperatura_Chiller_${resonador}`}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <ChartComponent
-            title="CURVA FLUJO 1 (CHILLER - COMPRESOR)"
-            data={[processedData.flujo_chiller]}
-            xAxisData={processedData.timestamps}
-            yAxisName="Flujo (L/min)"
-            seriesNames={['Flujo Chiller']}
-            colors={['#4ecdc4']}
-            exportData={prepareExportData(processedData, 'flujo_chiller', ['Flujo Chiller (L/min)'])}
-            exportFilename={`Flujo_Chiller_${resonador}`}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <ChartComponent
-            title="CURVA SENSOR CORRIENTE CHILLER"
-            data={[processedData.corriente_chiller]}
-            xAxisData={processedData.timestamps}
-            yAxisName="Corriente (A)"
-            seriesNames={['Corriente Chiller']}
-            colors={['#ffe66d']}
-            exportData={prepareExportData(processedData, 'corriente_chiller', ['Corriente Chiller (A)'])}
-            exportFilename={`Corriente_Chiller_${resonador}`}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <ChartComponent
-            title="CURVA TEMPERATURA 2 (AUXILIAR - COMPRESOR)"
-            data={[processedData.temp_linea_aux]}
-            xAxisData={processedData.timestamps}
-            yAxisName="Temperatura (°C)"
-            seriesNames={['Temp. Línea Aux']}
-            colors={['#6a0572']}
-            exportData={prepareExportData(processedData, 'temperatura_aux', ['Temperatura Auxiliar (°C)'])}
-            exportFilename={`Temperatura_Auxiliar_${resonador}`}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <ChartComponent
-            title="CURVA FLUJO 2 (AUXILIAR - COMPRESOR)"
-            data={[processedData.flujo_linea_aux]}
-            xAxisData={processedData.timestamps}
-            yAxisName="Flujo (L/min)"
-            seriesNames={['Flujo Línea Aux']}
-            colors={['#1a936f']}
-            exportData={prepareExportData(processedData, 'flujo_aux', ['Flujo Auxiliar (L/min)'])}
-            exportFilename={`Flujo_Auxiliar_${resonador}`}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <ChartComponent
-            title="CURVA SENSOR CORRIENTE COMPRESOR"
-            data={[processedData.corriente_compresor]}
-            xAxisData={processedData.timestamps}
-            yAxisName="Corriente (A)"
-            seriesNames={['Corriente Compresor']}
-            colors={['#3d5a80']}
-            exportData={prepareExportData(processedData, 'corriente_compresor', ['Corriente Compresor (A)'])}
-            exportFilename={`Corriente_Compresor_${resonador}`}
-          />
-        </Grid>
-
-        {/* Gráficas sin exportación (opcional) */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <ChartComponent
-            title="CURVA FUNCIONALIDAD ESTADO LINEA PRINCIPAL"
-            data={[processedData.estado_linea_principal]}
-            xAxisData={processedData.timestamps}
-            yAxisName="Estado (0/1)"
-            seriesNames={['Línea Principal']}
-            colors={['#9c27b0']}
-            exportData={prepareExportData(processedData, 'estado_principal', ['Estado Línea Principal'])}
-            exportFilename={`Estado_Principal_${resonador}`}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <ChartComponent
-            title="CURVA FUNCIONALIDAD ESTADO LINEA AUXILIAR"
-            data={[processedData.estado_linea_aux]}
-            xAxisData={processedData.timestamps}
-            yAxisName="Estado (0/1)"
-            seriesNames={['Línea Auxiliar']}
-            colors={['#f50057']}
-            exportData={prepareExportData(processedData, 'estado_auxiliar', ['Estado Línea Auxiliar'])}
-            exportFilename={`Estado_Auxiliar_${resonador}`}
-          />
-        </Grid>
-      </Grid>
 
       <ModalActivacion
         open={modalActivacion}

@@ -28,6 +28,7 @@ const EquipmentCard = ({ equipment, onDetailsClick }) => {
         borderRadius: 3,
         height: '100%',
         display: 'flex',
+        minWidth: { xs: 300, md: 400 },
         flexDirection: 'column',
         bgcolor: 'rgba(255, 255, 255, 0.05)',
         backdropFilter: 'blur(10px)',
