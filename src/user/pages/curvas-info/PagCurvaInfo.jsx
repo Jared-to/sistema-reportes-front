@@ -140,8 +140,8 @@ export const PagCurvaInfo = () => {
 
   const navigate = useNavigate()
   const [periodo, setPeriodo] = useState('24h');
-  const [selectedComparison1, setSelectedComparison1] = useState('comparativa_temperaturas');
-  const [selectedComparison2, setSelectedComparison2] = useState('comparativa_estados');
+  const [selectedComparison1, setSelectedComparison1] = useState('temperatura_chiller');
+  const [selectedComparison2, setSelectedComparison2] = useState('temperatura_auxiliar');
   const [equipoData, setEquipoData] = useState({});
   const [registrosData, setRegistrosData] = useState([]);
   const [processedData, setProcessedData] = useState(null);
@@ -170,30 +170,99 @@ export const PagCurvaInfo = () => {
     handleGetData();
   }, [institucion, resonador, periodo]);
 
-  // Configuración de comparativas disponibles
+  // Configuración de comparativas disponibles según el listado específico
   const comparisonConfig = {
+    // Gráficas individuales
+    temperatura_chiller: {
+      label: 'Temperatura agua chiller a compresor',
+      data: (processedData) => [processedData.temp_linea_chiller],
+      seriesNames: ['Temp. Chiller a Compresor'],
+      yAxisName: 'Temperatura (°C)',
+      colors: ['#ff6b6b']
+    },
+    temperatura_auxiliar: {
+      label: 'Temperatura agua auxiliar a compresor',
+      data: (processedData) => [processedData.temp_linea_aux],
+      seriesNames: ['Temp. Auxiliar a Compresor'],
+      yAxisName: 'Temperatura (°C)',
+      colors: ['#6a0572']
+    },
+    flujo_chiller: {
+      label: 'Flujo agua chiller a compresor',
+      data: (processedData) => [processedData.flujo_chiller],
+      seriesNames: ['Flujo Chiller a Compresor'],
+      yAxisName: 'Flujo (L/min)',
+      colors: ['#4ecdc4']
+    },
+    flujo_auxiliar: {
+      label: 'Flujo agua auxiliar a compresor',
+      data: (processedData) => [processedData.flujo_linea_aux],
+      seriesNames: ['Flujo Auxiliar a Compresor'],
+      yAxisName: 'Flujo (L/min)',
+      colors: ['#1a936f']
+    },
+    corriente_chiller: {
+      label: 'Corriente consumida chiller',
+      data: (processedData) => [processedData.corriente_chiller],
+      seriesNames: ['Corriente Chiller'],
+      yAxisName: 'Corriente (A)',
+      colors: ['#ffa726']
+    },
+    corriente_compresor: {
+      label: 'Corriente consumida compresor',
+      data: (processedData) => [processedData.corriente_compresor],
+      seriesNames: ['Corriente Compresor'],
+      yAxisName: 'Corriente (A)',
+      colors: ['#ab47bc']
+    },
+    estado_principal: {
+      label: 'Estado línea principal',
+      data: (processedData) => [processedData.estado_linea_principal],
+      seriesNames: ['Estado Línea Principal'],
+      yAxisName: 'Estado (0/1)',
+      colors: ['#9c27b0']
+    },
+    estado_auxiliar: {
+      label: 'Estado línea auxiliar',
+      data: (processedData) => [processedData.estado_linea_aux],
+      seriesNames: ['Estado Línea Auxiliar'],
+      yAxisName: 'Estado (0/1)',
+      colors: ['#f50057']
+    },
+
+    // Gráficas comparativas
+    temperatura_vs_flujo_chiller: {
+      label: 'Temperatura versus flujo chiller',
+      data: (processedData) => [
+        processedData.temp_linea_chiller,
+        processedData.flujo_chiller
+      ],
+      seriesNames: ['Temperatura Chiller', 'Flujo Chiller'],
+      yAxisName: 'Valores Normalizados',
+      colors: ['#ff6b6b', '#4ecdc4']
+    },
     comparativa_temperaturas: {
-      label: 'Comparativa de Temperaturas',
+      label: 'Comparativa de temperaturas',
       data: (processedData) => [
         processedData.temp_linea_chiller,
         processedData.temp_linea_aux
       ],
-      seriesNames: ['Temp. Chiller', 'Temp. Línea Aux'],
+      seriesNames: ['Temp. Chiller', 'Temp. Auxiliar'],
       yAxisName: 'Temperatura (°C)',
       colors: ['#ff6b6b', '#6a0572']
     },
     comparativa_flujos: {
-      label: 'Comparativa de Flujos',
+      label: 'Comparativa de flujos',
       data: (processedData) => [
         processedData.flujo_chiller,
         processedData.flujo_linea_aux
       ],
-      seriesNames: ['Flujo Chiller', 'Flujo Línea Aux'],
+      seriesNames: ['Flujo Chiller', 'Flujo Auxiliar'],
       yAxisName: 'Flujo (L/min)',
       colors: ['#4ecdc4', '#1a936f']
     },
     comparativa_estados: {
-      label: 'Comparativa Estado Línea Principal vs Auxiliar',
+      label: 'Comparativa estado línea principal vs auxiliar',
       data: (processedData) => [
         processedData.estado_linea_principal,
         processedData.estado_linea_aux
@@ -202,79 +271,29 @@ export const PagCurvaInfo = () => {
       yAxisName: 'Estado (0/1)',
       colors: ['#9c27b0', '#f50057']
     },
-    eficiencia_energetica: {
-      label: 'Eficiencia Energética',
-      data: (processedData) => [
-        processedData.corriente_chiller.map((corriente, index) =>
-          corriente + (processedData.corriente_compresor[index] || 0)
-        )
-      ],
-      seriesNames: ['Consumo Total'],
-      yAxisName: 'Corriente Total (A)',
-      colors: ['#26c6da']
-    },
 
-    eficiencia_compresor: {
-      label: 'Eficiencia del Compresor',
-      data: (processedData) => [
-        processedData.temp_linea_chiller,
-        processedData.corriente_compresor
-      ],
-      seriesNames: ['Temp. Chiller', 'Corriente Compresor'],
-      yAxisName: 'Valores Normalizados',
-      colors: ['#ff6b6b', '#ffa726']
-    },
-
-    balance_energetico: {
-      label: 'Balance Energético del Sistema',
+    // Gráficas adicionales combinadas
+    corrientes_combinadas: {
+      label: 'Corrientes Chiller y Compresor',
       data: (processedData) => [
         processedData.corriente_chiller,
-        processedData.corriente_compresor,
-        processedData.corriente_chiller.map((chiller, index) =>
-          chiller + (processedData.corriente_compresor[index] || 0)
-        )
+        processedData.corriente_compresor
       ],
-      seriesNames: ['Chiller', 'Compresor', 'Consumo Total'],
+      seriesNames: ['Corriente Chiller', 'Corriente Compresor'],
       yAxisName: 'Corriente (A)',
-      colors: ['#26c6da', '#ab47bc', '#66bb6a']
+      colors: ['#ffa726', '#ab47bc']
     },
-
-    relacion_temperatura_flujo: {
-      label: 'Temperatura vs Flujo Chiller',
-      data: (processedData) => [
-        processedData.temp_linea_chiller,
-        processedData.flujo_chiller
-      ],
-      seriesNames: ['Temperatura', 'Flujo'],
-      yAxisName: 'Valores Normalizados',
-      colors: ['#ff6b6b', '#4ecdc4']
-    },
-
-    estado_sistema_completo: {
-      label: 'Estado Completo del Sistema',
-      data: (processedData) => [
-        processedData.estado_linea_principal,
-        processedData.estado_linea_aux,
-        processedData.estado_linea_principal.map((principal, index) =>
-          principal + (processedData.estado_linea_aux[index] || 0)
-        )
-      ],
-      seriesNames: ['Principal', 'Auxiliar', 'Estado Total'],
-      yAxisName: 'Estado (0-2)',
-      colors: ['#9c27b0', '#f50057', '#4caf50']
-    },
-
-    // Nueva comparativa para eficiencia térmica
-    eficiencia_termica: {
-      label: 'Eficiencia Térmica del Sistema',
+    sistema_completo: {
+      label: 'Vista Completa del Sistema',
       data: (processedData) => [
         processedData.temp_linea_chiller,
         processedData.temp_linea_aux,
-        processedData.flujo_chiller
+        processedData.flujo_chiller,
+        processedData.flujo_linea_aux
       ],
-      seriesNames: ['Temp. Chiller', 'Temp. Auxiliar', 'Flujo Chiller'],
+      seriesNames: ['Temp Chiller', 'Temp Aux', 'Flujo Chiller', 'Flujo Aux'],
       yAxisName: 'Valores Normalizados',
-      colors: ['#ff6b6b', '#6a0572', '#4ecdc4']
+      colors: ['#ff6b6b', '#6a0572', '#4ecdc4', '#1a936f']
     }
   };
 
@@ -328,6 +347,26 @@ export const PagCurvaInfo = () => {
   const chart1Data = getChart1Data();
   const chart2Data = getChart2Data();
 
+  // Agrupar las opciones por categorías para mejor organización
+  const individualOptions = [
+    'temperatura_chiller',
+    'temperatura_auxiliar', 
+    'flujo_chiller',
+    'flujo_auxiliar',
+    'corriente_chiller',
+    'corriente_compresor',
+    'estado_principal',
+    'estado_auxiliar'
+  ];
+
+  const comparativeOptions = [
+    'temperatura_vs_flujo_chiller',
+    'comparativa_temperaturas',
+    'comparativa_flujos',
+    'comparativa_estados',
+    'corrientes_combinadas',
+    'sistema_completo'
+  ];
 
   return (
     <Box sx={{ color: 'white', p: 3 }}>
@@ -345,9 +384,9 @@ export const PagCurvaInfo = () => {
           </Typography>
         </Box>
       </Box>
-      {/*  selectores de período */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
 
+      {/* Selectores de período */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
         <FormControl sx={{ minWidth: 150 }} size="small">
           <InputLabel id="periodo-select-label" sx={{ color: 'white' }}>Rango de Tiempo</InputLabel>
           <Select
@@ -383,18 +422,18 @@ export const PagCurvaInfo = () => {
       </Box>
 
       {/* Grid de gráficas comparativas */}
-      <Grid container spacing={2}>
-        {/* Gráfica 1 - Comparativa Principal */}
-        <Grid size={{ xs: 12, }}>
+      <Grid container spacing={3}>
+        {/* Gráfica 1 */}
+        <Grid size={{ xs: 12 }}>
           <Box sx={{ mb: 2 }}>
             <FormControl fullWidth size="small">
               <InputLabel id="comparison1-select-label" sx={{ color: 'white' }}>
-                Comparativa 1
+                Gráfica 1
               </InputLabel>
               <Select
                 labelId="comparison1-select-label"
                 value={selectedComparison1}
-                label="Comparativa 1"
+                label="Gráfica 1"
                 onChange={(e) => setSelectedComparison1(e.target.value)}
                 sx={{
                   color: 'white',
@@ -402,9 +441,23 @@ export const PagCurvaInfo = () => {
                   '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.5)' }
                 }}
               >
-                {Object.entries(comparisonConfig).map(([key, config]) => (
+                {/* Opciones individuales */}
+                <MenuItem disabled sx={{ color: '#ff6b6b', fontWeight: 'bold' }}>
+                  ─── Parámetros Individuales ───
+                </MenuItem>
+                {individualOptions.map((key) => (
                   <MenuItem key={key} value={key}>
-                    {config.label}
+                    {comparisonConfig[key].label}
+                  </MenuItem>
+                ))}
+                
+                {/* Opciones comparativas */}
+                <MenuItem disabled sx={{ color: '#4ecdc4', fontWeight: 'bold', mt: 1 }}>
+                  ─── Comparativas ───
+                </MenuItem>
+                {comparativeOptions.map((key) => (
+                  <MenuItem key={key} value={key}>
+                    {comparisonConfig[key].label}
                   </MenuItem>
                 ))}
               </Select>
@@ -420,17 +473,17 @@ export const PagCurvaInfo = () => {
           />
         </Grid>
 
-        {/* Gráfica 2 - Comparativa Secundaria */}
+        {/* Gráfica 2 */}
         <Grid size={{ xs: 12, }}>
           <Box sx={{ mb: 2 }}>
             <FormControl fullWidth size="small">
               <InputLabel id="comparison2-select-label" sx={{ color: 'white' }}>
-                Comparativa 2
+                Gráfica 2
               </InputLabel>
               <Select
                 labelId="comparison2-select-label"
                 value={selectedComparison2}
-                label="Comparativa 2"
+                label="Gráfica 2"
                 onChange={(e) => setSelectedComparison2(e.target.value)}
                 sx={{
                   color: 'white',
@@ -438,9 +491,23 @@ export const PagCurvaInfo = () => {
                   '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.5)' }
                 }}
               >
-                {Object.entries(comparisonConfig).map(([key, config]) => (
+                {/* Opciones individuales */}
+                <MenuItem disabled sx={{ color: '#ff6b6b', fontWeight: 'bold' }}>
+                  ─── Parámetros Individuales ───
+                </MenuItem>
+                {individualOptions.map((key) => (
                   <MenuItem key={key} value={key}>
-                    {config.label}
+                    {comparisonConfig[key].label}
+                  </MenuItem>
+                ))}
+                
+                {/* Opciones comparativas */}
+                <MenuItem disabled sx={{ color: '#4ecdc4', fontWeight: 'bold', mt: 1 }}>
+                  ─── Comparativas ───
+                </MenuItem>
+                {comparativeOptions.map((key) => (
+                  <MenuItem key={key} value={key}>
+                    {comparisonConfig[key].label}
                   </MenuItem>
                 ))}
               </Select>
@@ -456,7 +523,6 @@ export const PagCurvaInfo = () => {
           />
         </Grid>
       </Grid>
-
     </Box>
   );
 };

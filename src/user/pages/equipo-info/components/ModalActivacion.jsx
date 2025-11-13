@@ -30,7 +30,8 @@ import {
   Paper,
   FormLabel,
   Grid,
-  useTheme
+  useTheme,
+  Collapse
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
@@ -43,6 +44,8 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AllInclusiveIcon from '@mui/icons-material/AllInclusive';
 import SettingsIcon from '@mui/icons-material/Settings';
 import TerminalIcon from '@mui/icons-material/Terminal';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 
 // Importar MQTT
 import mqtt from 'mqtt';
@@ -72,6 +75,8 @@ export const ModalActivacion = ({
   const [probandoBrokers, setProbandoBrokers] = useState(false);
   const [resultadosPrueba, setResultadosPrueba] = useState([]);
   const [logs, setLogs] = useState([]);
+  const [mostrarConfiguracion, setMostrarConfiguracion] = useState(false);
+  const [mostrarLogs, setMostrarLogs] = useState(false);
 
   const clientRef = useRef(null);
   const lastCmdMsRef = useRef(0);
@@ -372,7 +377,6 @@ export const ModalActivacion = ({
           setMensajeExito(`Línea cambiada a ${linea === 'principal' ? 'Principal' : 'Auxiliar'}`);
 
           setTimeout(() => {
-            onClose();
             setMensajeExito('');
           }, 1500);
         }
@@ -407,11 +411,6 @@ export const ModalActivacion = ({
   };
 
   const handleConfirmar = () => {
-    if (lineaSeleccionada === (equipo.linea_principal ? 'principal' : 'auxiliar')) {
-      setError('La línea seleccionada ya está activa');
-      return;
-    }
-
     enviarComando(lineaSeleccionada);
   };
 
@@ -439,7 +438,7 @@ export const ModalActivacion = ({
       <Dialog
         open={open}
         onClose={onClose}
-        maxWidth="lg"
+        maxWidth="md"
         fullWidth
         PaperProps={{
           sx: {
@@ -519,31 +518,159 @@ export const ModalActivacion = ({
             </Alert>
           )}
 
-          <Grid container spacing={3}>
-            {/* Columna izquierda - Configuración */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              {/* Configuración MQTT */}
-              <Card sx={{
-                mb: 2,
-                background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
-              }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <SettingsIcon sx={{ mr: 1, color: '#8b5cf6' }} />
-                    <Typography variant="h6" color="white">
-                      Configuración MQTT
-                    </Typography>
-                  </Box>
+          {/* Botones para mostrar/ocultar configuraciones avanzadas */}
+          <Box sx={{ display: 'flex', gap: 1, mb: 2,mt:2, flexWrap: 'wrap' }}>
+            <Button
+              onClick={() => setMostrarConfiguracion(!mostrarConfiguracion)}
+              startIcon={mostrarConfiguracion ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              endIcon={<SettingsIcon />}
+              variant="outlined"
+              size="small"
+              sx={{
+                borderColor: '#8b5cf6',
+                color: '#8b5cf6',
+                '&:hover': {
+                  borderColor: '#a78bfa',
+                  backgroundColor: 'rgba(139, 92, 246, 0.1)'
+                }
+              }}
+            >
+              Configuración MQTT
+            </Button>
+            <Button
+              onClick={() => setMostrarLogs(!mostrarLogs)}
+              startIcon={mostrarLogs ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              endIcon={<TerminalIcon />}
+              variant="outlined"
+              size="small"
+              sx={{
+                borderColor: '#06b6d4',
+                color: '#06b6d4',
+                '&:hover': {
+                  borderColor: '#22d3ee',
+                  backgroundColor: 'rgba(6, 182, 212, 0.1)'
+                }
+              }}
+            >
+              Logs de Comunicación
+            </Button>
+            <Button
+              onClick={conectarMQTT}
+              disabled={estadoConexion === 'conectando'}
+              startIcon={<WifiIcon />}
+              variant="contained"
+              size="small"
+              sx={{
+                ml: 'auto',
+                background: estadoConexion === 'conectado' ?
+                  'linear-gradient(135deg, #10b981 0%, #059669 100%)' :
+                  'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                '&:hover': {
+                  background: estadoConexion === 'conectado' ?
+                    'linear-gradient(135deg, #059669 0%, #047857 100%)' :
+                    'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)'
+                }
+              }}
+            >
+              {estadoConexion === 'conectado' ? 'Reconectar' : 'Conectar'}
+            </Button>
+          </Box>
 
+          {/* Configuración MQTT (Oculta por defecto) */}
+          <Collapse in={mostrarConfiguracion}>
+            <Card sx={{
+              mb: 2,
+              background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+            }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <SettingsIcon sx={{ mr: 1, color: '#8b5cf6' }} />
+                  <Typography variant="h6" color="white">
+                    Configuración MQTT
+                  </Typography>
+                </Box>
+
+                <TextField
+                  label="Topic ID"
+                  value={topicId}
+                  onChange={(e) => setTopicId(e.target.value)}
+                  fullWidth
+                  size="small"
+                  sx={{ mb: 2 }}
+                  InputProps={{
+                    sx: {
+                      color: 'white',
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      borderRadius: 1
+                    }
+                  }}
+                  InputLabelProps={{
+                    sx: { color: 'rgba(255, 255, 255, 0.7)' }
+                  }}
+                  helperText="Identificador único del dispositivo"
+                  FormHelperTextProps={{
+                    sx: { color: 'rgba(255, 255, 255, 0.5)' }
+                  }}
+                />
+
+                <FormControl component="fieldset" fullWidth>
+                  <FormLabel component="legend" sx={{ mb: 1, color: 'white', fontWeight: 500 }}>
+                    Broker MQTT
+                  </FormLabel>
+                  <RadioGroup
+                    value={brokerSeleccionado}
+                    onChange={(e) => setBrokerSeleccionado(e.target.value)}
+                  >
+                    {Object.entries(brokers).map(([key, config]) => (
+                      <FormControlLabel
+                        key={key}
+                        value={key}
+                        control={<Radio sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />}
+                        label={
+                          <Box>
+                            <Typography variant="body2" color="white">
+                              {config.label}
+                            </Typography>
+                            <Typography variant="caption" color="rgba(255, 255, 255, 0.5)">
+                              {config.url}
+                            </Typography>
+                          </Box>
+                        }
+                        sx={{
+                          mb: 1,
+                          p: 1,
+                          borderRadius: 1,
+                          backgroundColor: brokerSeleccionado === key ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+                          border: brokerSeleccionado === key ? '1px solid #3b82f6' : '1px solid transparent'
+                        }}
+                      />
+                    ))}
+                    <FormControlLabel
+                      value="custom"
+                      control={<Radio sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />}
+                      label="Custom"
+                      sx={{
+                        mb: 1,
+                        p: 1,
+                        borderRadius: 1,
+                        backgroundColor: brokerSeleccionado === 'custom' ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+                        border: brokerSeleccionado === 'custom' ? '1px solid #3b82f6' : '1px solid transparent'
+                      }}
+                    />
+                  </RadioGroup>
+                </FormControl>
+
+                {brokerSeleccionado === 'custom' && (
                   <TextField
-                    label="Topic ID"
-                    value={topicId}
-                    onChange={(e) => setTopicId(e.target.value)}
+                    label="URL Custom"
+                    value={customUrl}
+                    onChange={(e) => setCustomUrl(e.target.value)}
+                    placeholder="wss://host:puerto/mqtt"
                     fullWidth
                     size="small"
-                    sx={{ mb: 2 }}
+                    sx={{ mt: 1 }}
                     InputProps={{
                       sx: {
                         color: 'white',
@@ -554,179 +681,80 @@ export const ModalActivacion = ({
                     InputLabelProps={{
                       sx: { color: 'rgba(255, 255, 255, 0.7)' }
                     }}
-                    helperText="Identificador único del dispositivo"
+                    helperText="URL completa del broker MQTT"
                     FormHelperTextProps={{
                       sx: { color: 'rgba(255, 255, 255, 0.5)' }
                     }}
                   />
+                )}
 
-                  <FormControl component="fieldset" fullWidth>
-                    <FormLabel component="legend" sx={{ mb: 1, color: 'white', fontWeight: 500 }}>
-                      Broker MQTT
-                    </FormLabel>
-                    <RadioGroup
-                      value={brokerSeleccionado}
-                      onChange={(e) => setBrokerSeleccionado(e.target.value)}
-                    >
-                      {Object.entries(brokers).map(([key, config]) => (
-                        <FormControlLabel
-                          key={key}
-                          value={key}
-                          control={<Radio sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />}
-                          label={
-                            <Box>
-                              <Typography variant="body2" color="white">
-                                {config.label}
-                              </Typography>
-                              <Typography variant="caption" color="rgba(255, 255, 255, 0.5)">
-                                {config.url}
-                              </Typography>
-                            </Box>
-                          }
-                          sx={{
-                            mb: 1,
-                            p: 1,
-                            borderRadius: 1,
-                            backgroundColor: brokerSeleccionado === key ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
-                            border: brokerSeleccionado === key ? '1px solid #3b82f6' : '1px solid transparent'
-                          }}
-                        />
-                      ))}
-                      <FormControlLabel
-                        value="custom"
-                        control={<Radio sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />}
-                        label="Custom"
-                        sx={{
-                          mb: 1,
-                          p: 1,
-                          borderRadius: 1,
-                          backgroundColor: brokerSeleccionado === 'custom' ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
-                          border: brokerSeleccionado === 'custom' ? '1px solid #3b82f6' : '1px solid transparent'
-                        }}
-                      />
-                    </RadioGroup>
-                  </FormControl>
+                <Box sx={{ display: 'flex', gap: 1, mt: 2, flexWrap: 'wrap' }}>
+                  <Button
+                    onClick={probarBrokerActual}
+                    disabled={probandoBrokers}
+                    startIcon={probandoBrokers ? <CircularProgress size={16} /> : <PlayArrowIcon />}
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                      borderColor: '#8b5cf6',
+                      color: '#8b5cf6',
+                      '&:hover': {
+                        borderColor: '#a78bfa',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)'
+                      }
+                    }}
+                  >
+                    Probar Broker
+                  </Button>
+                  <Button
+                    onClick={probarTodosLosBrokers}
+                    disabled={probandoBrokers}
+                    startIcon={probandoBrokers ? <CircularProgress size={16} /> : <AllInclusiveIcon />}
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                      borderColor: '#06b6d4',
+                      color: '#06b6d4',
+                      '&:hover': {
+                        borderColor: '#22d3ee',
+                        backgroundColor: 'rgba(6, 182, 212, 0.1)'
+                      }
+                    }}
+                  >
+                    Probar Todos
+                  </Button>
+                </Box>
 
-                  {brokerSeleccionado === 'custom' && (
-                    <TextField
-                      label="URL Custom"
-                      value={customUrl}
-                      onChange={(e) => setCustomUrl(e.target.value)}
-                      placeholder="wss://host:puerto/mqtt"
-                      fullWidth
-                      size="small"
-                      sx={{ mt: 1 }}
-                      InputProps={{
-                        sx: {
-                          color: 'white',
-                          backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                          borderRadius: 1
-                        }
-                      }}
-                      InputLabelProps={{
-                        sx: { color: 'rgba(255, 255, 255, 0.7)' }
-                      }}
-                      helperText="URL completa del broker MQTT"
-                      FormHelperTextProps={{
-                        sx: { color: 'rgba(255, 255, 255, 0.5)' }
-                      }}
-                    />
-                  )}
-
-                  <Box sx={{ display: 'flex', gap: 1, mt: 2, flexWrap: 'wrap' }}>
-                    <Button
-                      onClick={probarBrokerActual}
-                      disabled={probandoBrokers}
-                      startIcon={probandoBrokers ? <CircularProgress size={16} /> : <PlayArrowIcon />}
-                      variant="outlined"
-                      size="small"
-                      sx={{
-                        borderColor: '#8b5cf6',
-                        color: '#8b5cf6',
-                        '&:hover': {
-                          borderColor: '#a78bfa',
-                          backgroundColor: 'rgba(139, 92, 246, 0.1)'
-                        }
-                      }}
-                    >
-                      Probar Broker
-                    </Button>
-                    <Button
-                      onClick={probarTodosLosBrokers}
-                      disabled={probandoBrokers}
-                      startIcon={probandoBrokers ? <CircularProgress size={16} /> : <AllInclusiveIcon />}
-                      variant="outlined"
-                      size="small"
-                      sx={{
-                        borderColor: '#06b6d4',
-                        color: '#06b6d4',
-                        '&:hover': {
-                          borderColor: '#22d3ee',
-                          backgroundColor: 'rgba(6, 182, 212, 0.1)'
-                        }
-                      }}
-                    >
-                      Probar Todos
-                    </Button>
-                    <Button
-                      onClick={conectarMQTT}
-                      disabled={estadoConexion === 'conectando'}
-                      startIcon={<WifiIcon />}
-                      variant="contained"
-                      size="small"
-                      sx={{
-                        ml: 'auto',
-                        background: estadoConexion === 'conectado' ?
-                          'linear-gradient(135deg, #10b981 0%, #059669 100%)' :
-                          'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                        '&:hover': {
-                          background: estadoConexion === 'conectado' ?
-                            'linear-gradient(135deg, #059669 0%, #047857 100%)' :
-                            'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)'
-                        }
-                      }}
-                    >
-                      {estadoConexion === 'conectado' ? 'Reconectar' : 'Conectar'}
-                    </Button>
-                  </Box>
-
-                  {/* Configuración ESP32 */}
+                {/* Configuración ESP32 */}
+                <Box sx={{
+                  mt: 2,
+                  p: 2,
+                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                  borderRadius: 1,
+                  border: '1px solid rgba(255, 255, 255, 0.1)'
+                }}>
+                  <Typography variant="subtitle2" color="#f59e0b" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                    <TerminalIcon sx={{ mr: 1, fontSize: 18 }} />
+                    Configuración ESP32:
+                  </Typography>
                   <Box sx={{
-                    mt: 2,
-                    p: 2,
-                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                    borderRadius: 1,
+                    fontFamily: 'monospace',
+                    fontSize: '0.75rem',
+                    color: '#e2e8f0',
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    p: 1,
+                    borderRadius: 0.5,
                     border: '1px solid rgba(255, 255, 255, 0.1)'
                   }}>
-                    <Typography variant="subtitle2" color="#f59e0b" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-                      <TerminalIcon sx={{ mr: 1, fontSize: 18 }} />
-                      Configuración ESP32:
-                    </Typography>
-                    <Box sx={{
-                      fontFamily: 'monospace',
-                      fontSize: '0.75rem',
-                      color: '#e2e8f0',
-                      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                      p: 1,
-                      borderRadius: 0.5,
-                      border: '1px solid rgba(255, 255, 255, 0.1)'
-                    }}>
-                      <div>{`#define MQTT_HOST "${espConfig.host}"`}</div>
-                      <div>{`#define MQTT_PORT ${espConfig.port}`}</div>
-                      <div>{`#define TOPIC_ID "${topicId}"`}</div>
-                    </Box>
+                    <div>{`#define MQTT_HOST "${espConfig.host}"`}</div>
+                    <div>{`#define MQTT_PORT ${espConfig.port}`}</div>
+                    <div>{`#define TOPIC_ID "${topicId}"`}</div>
                   </Box>
-                </CardContent>
-              </Card>
+                </Box>
 
-              {/* Resultados de prueba */}
-              {resultadosPrueba.length > 0 && (
-                <Card sx={{
-                  background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
-                }}>
-                  <CardContent>
+                {/* Resultados de prueba */}
+                {resultadosPrueba.length > 0 && (
+                  <Box sx={{ mt: 2 }}>
                     <Typography variant="h6" gutterBottom color="white">
                       📊 Resultados de Prueba
                     </Typography>
@@ -778,209 +806,208 @@ export const ModalActivacion = ({
                         </TableBody>
                       </Table>
                     </TableContainer>
-                  </CardContent>
-                </Card>
-              )}
-            </Grid>
-
-            {/* Columna derecha - Control y Logs */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              {/* Control de líneas */}
-              <Card sx={{
-                mb: 2,
-                background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
-              }}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom color="white" sx={{ display: 'flex', alignItems: 'center' }}>
-                    <SwapHorizIcon sx={{ mr: 1, color: '#f59e0b' }} />
-                    Control de Líneas
-                  </Typography>
-
-                  <FormControl component="fieldset" fullWidth>
-                    <RadioGroup
-                      value={lineaSeleccionada}
-                      onChange={handleChange}
-                    >
-                      <Box
-                        sx={{
-                          p: 2,
-                          mb: 2,
-                          borderRadius: 2,
-                          border: '2px solid',
-                          borderColor: lineaSeleccionada === 'principal' ? '#10b981' : 'rgba(255, 255, 255, 0.2)',
-                          backgroundColor: lineaSeleccionada === 'principal' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            borderColor: lineaSeleccionada === 'principal' ? '#10b981' : 'rgba(255, 255, 255, 0.4)',
-                          }
-                        }}
-                      >
-                        <FormControlLabel
-                          value="principal"
-                          control={
-                            <Radio
-                              disabled={estadoConexion !== 'conectado' || cambiandoLinea}
-                              sx={{
-                                color: lineaSeleccionada === 'principal' ? '#10b981' : 'rgba(255, 255, 255, 0.7)',
-                                '&.Mui-checked': { color: '#10b981' }
-                              }}
-                            />
-                          }
-                          label={
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              <CheckCircleIcon sx={{ color: '#10b981', mr: 1 }} />
-                              <Typography color="white" fontWeight="500">Línea Principal</Typography>
-                              {lineaSeleccionada === 'principal' && (
-                                <Chip
-                                  label="ACTUAL"
-                                  size="small"
-                                  sx={{
-                                    ml: 2,
-                                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                                    color: '#10b981',
-                                    border: '1px solid #10b981'
-                                  }}
-                                />
-                              )}
-                            </Box>
-                          }
-                        />
-                        <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ ml: 4, mt: 0.5 }}>
-                          Sistema de enfriamiento principal con mayor capacidad
-                        </Typography>
-                      </Box>
-
-                      <Box
-                        sx={{
-                          p: 2,
-                          borderRadius: 2,
-                          border: '2px solid',
-                          borderColor: lineaSeleccionada === 'auxiliar' ? '#f59e0b' : 'rgba(255, 255, 255, 0.2)',
-                          backgroundColor: lineaSeleccionada === 'auxiliar' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            borderColor: lineaSeleccionada === 'auxiliar' ? '#f59e0b' : 'rgba(255, 255, 255, 0.4)',
-                          }
-                        }}
-                      >
-                        <FormControlLabel
-                          value="auxiliar"
-                          control={
-                            <Radio
-                              disabled={estadoConexion !== 'conectado' || cambiandoLinea}
-                              sx={{
-                                color: lineaSeleccionada === 'auxiliar' ? '#f59e0b' : 'rgba(255, 255, 255, 0.7)',
-                                '&.Mui-checked': { color: '#f59e0b' }
-                              }}
-                            />
-                          }
-                          label={
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              <WarningIcon sx={{ color: '#f59e0b', mr: 1 }} />
-                              <Typography color="white" fontWeight="500">Línea Auxiliar</Typography>
-                              {lineaSeleccionada === 'auxiliar' && (
-                                <Chip
-                                  label="ACTUAL"
-                                  size="small"
-                                  sx={{
-                                    ml: 2,
-                                    backgroundColor: 'rgba(245, 158, 11, 0.2)',
-                                    color: '#f59e0b',
-                                    border: '1px solid #f59e0b'
-                                  }}
-                                />
-                              )}
-                            </Box>
-                          }
-                        />
-                        <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ ml: 4, mt: 0.5 }}>
-                          Sistema de respaldo para mantenimiento o emergencias
-                        </Typography>
-                      </Box>
-                    </RadioGroup>
-                  </FormControl>
-                </CardContent>
-              </Card>
-
-              {/* Logs */}
-              <Card sx={{
-                background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
-              }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography variant="h6" color="white" sx={{ display: 'flex', alignItems: 'center' }}>
-                      <TerminalIcon sx={{ mr: 1 }} />
-                      Logs de Comunicación
-                    </Typography>
-                    <Button
-                      size="small"
-                      startIcon={<DownloadIcon />}
-                      onClick={() => {
-                        const logText = logs.join('\n');
-                        const blob = new Blob([logText], { type: 'text/plain' });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `mqtt-logs-${new Date().toISOString().split('T')[0]}.txt`;
-                        a.click();
-                        URL.revokeObjectURL(url);
-                      }}
-                      disabled={logs.length === 0}
-                      sx={{
-                        color: '#06b6d4',
-                        borderColor: '#06b6d4',
-                        '&:hover': {
-                          borderColor: '#22d3ee',
-                          backgroundColor: 'rgba(6, 182, 212, 0.1)'
-                        }
-                      }}
-                      variant="outlined"
-                    >
-                      Exportar
-                    </Button>
                   </Box>
+                )}
+              </CardContent>
+            </Card>
+          </Collapse>
+
+          {/* Control de líneas (Siempre visible) */}
+          <Card sx={{
+            mb: 2,
+            background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+          }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom color="white" sx={{ display: 'flex', alignItems: 'center' }}>
+                <SwapHorizIcon sx={{ mr: 1, color: '#f59e0b' }} />
+                Control de Líneas
+              </Typography>
+
+              <FormControl component="fieldset" fullWidth>
+                <RadioGroup
+                  value={lineaSeleccionada}
+                  onChange={handleChange}
+                >
                   <Box
                     sx={{
-                      height: 200,
-                      overflow: 'auto',
-                      backgroundColor: 'rgba(0, 0, 0, 0.4)',
                       p: 2,
-                      borderRadius: 1,
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      fontFamily: 'monospace',
-                      fontSize: '0.75rem',
-                      color: '#e2e8f0'
+                      mb: 2,
+                      borderRadius: 2,
+                      border: '2px solid',
+                      borderColor: lineaSeleccionada === 'principal' ? '#10b981' : 'rgba(255, 255, 255, 0.2)',
+                      backgroundColor: lineaSeleccionada === 'principal' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        borderColor: lineaSeleccionada === 'principal' ? '#10b981' : 'rgba(255, 255, 255, 0.4)',
+                      }
                     }}
                   >
-                    {logs.length === 0 ? (
-                      <Typography color="rgba(255, 255, 255, 0.5)" fontStyle="italic">
-                        No hay logs disponibles. Conecta al broker para ver la actividad.
-                      </Typography>
-                    ) : (
-                      logs.map((log, index) => (
-                        <Box
-                          key={index}
+                    <FormControlLabel
+                      value="principal"
+                      control={
+                        <Radio
+                          disabled={estadoConexion !== 'conectado' || cambiandoLinea}
                           sx={{
-                            py: 0.5,
-                            borderBottom: index < logs.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
-                            '&:hover': {
-                              backgroundColor: 'rgba(255, 255, 255, 0.05)'
-                            }
+                            color: lineaSeleccionada === 'principal' ? '#10b981' : 'rgba(255, 255, 255, 0.7)',
+                            '&.Mui-checked': { color: '#10b981' }
                           }}
-                        >
-                          {log}
+                        />
+                      }
+                      label={
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <CheckCircleIcon sx={{ color: '#10b981', mr: 1 }} />
+                          <Typography color="white" fontWeight="500">Línea Principal</Typography>
+                          {lineaSeleccionada === 'principal' && (
+                            <Chip
+                              label="ACTUAL"
+                              size="small"
+                              sx={{
+                                ml: 2,
+                                backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                                color: '#10b981',
+                                border: '1px solid #10b981'
+                              }}
+                            />
+                          )}
                         </Box>
-                      ))
-                    )}
+                      }
+                    />
+                    <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ ml: 4, mt: 0.5 }}>
+                      Sistema de enfriamiento principal con mayor capacidad
+                    </Typography>
                   </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+
+                  <Box
+                    sx={{
+                      p: 2,
+                      borderRadius: 2,
+                      border: '2px solid',
+                      borderColor: lineaSeleccionada === 'auxiliar' ? '#f59e0b' : 'rgba(255, 255, 255, 0.2)',
+                      backgroundColor: lineaSeleccionada === 'auxiliar' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        borderColor: lineaSeleccionada === 'auxiliar' ? '#f59e0b' : 'rgba(255, 255, 255, 0.4)',
+                      }
+                    }}
+                  >
+                    <FormControlLabel
+                      value="auxiliar"
+                      control={
+                        <Radio
+                          disabled={estadoConexion !== 'conectado' || cambiandoLinea}
+                          sx={{
+                            color: lineaSeleccionada === 'auxiliar' ? '#f59e0b' : 'rgba(255, 255, 255, 0.7)',
+                            '&.Mui-checked': { color: '#f59e0b' }
+                          }}
+                        />
+                      }
+                      label={
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <WarningIcon sx={{ color: '#f59e0b', mr: 1 }} />
+                          <Typography color="white" fontWeight="500">Línea Auxiliar</Typography>
+                          {lineaSeleccionada === 'auxiliar' && (
+                            <Chip
+                              label="ACTUAL"
+                              size="small"
+                              sx={{
+                                ml: 2,
+                                backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                                color: '#f59e0b',
+                                border: '1px solid #f59e0b'
+                              }}
+                            />
+                          )}
+                        </Box>
+                      }
+                    />
+                    <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ ml: 4, mt: 0.5 }}>
+                      Sistema de respaldo para mantenimiento o emergencias
+                    </Typography>
+                  </Box>
+                </RadioGroup>
+              </FormControl>
+            </CardContent>
+          </Card>
+
+          {/* Logs (Ocultos por defecto) */}
+          <Collapse in={mostrarLogs}>
+            <Card sx={{
+              background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+            }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="h6" color="white" sx={{ display: 'flex', alignItems: 'center' }}>
+                    <TerminalIcon sx={{ mr: 1 }} />
+                    Logs de Comunicación
+                  </Typography>
+                  <Button
+                    size="small"
+                    startIcon={<DownloadIcon />}
+                    onClick={() => {
+                      const logText = logs.join('\n');
+                      const blob = new Blob([logText], { type: 'text/plain' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `mqtt-logs-${new Date().toISOString().split('T')[0]}.txt`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    disabled={logs.length === 0}
+                    sx={{
+                      color: '#06b6d4',
+                      borderColor: '#06b6d4',
+                      '&:hover': {
+                        borderColor: '#22d3ee',
+                        backgroundColor: 'rgba(6, 182, 212, 0.1)'
+                      }
+                    }}
+                    variant="outlined"
+                  >
+                    Exportar
+                  </Button>
+                </Box>
+                <Box
+                  sx={{
+                    height: 200,
+                    overflow: 'auto',
+                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                    p: 2,
+                    borderRadius: 1,
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    fontFamily: 'monospace',
+                    fontSize: '0.75rem',
+                    color: '#e2e8f0'
+                  }}
+                >
+                  {logs.length === 0 ? (
+                    <Typography color="rgba(255, 255, 255, 0.5)" fontStyle="italic">
+                      No hay logs disponibles. Conecta al broker para ver la actividad.
+                    </Typography>
+                  ) : (
+                    logs.map((log, index) => (
+                      <Box
+                        key={index}
+                        sx={{
+                          py: 0.5,
+                          borderBottom: index < logs.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
+                          '&:hover': {
+                            backgroundColor: 'rgba(255, 255, 255, 0.05)'
+                          }
+                        }}
+                      >
+                        {log}
+                      </Box>
+                    ))
+                  )}
+                </Box>
+              </CardContent>
+            </Card>
+          </Collapse>
         </DialogContent>
 
         <DialogActions sx={{

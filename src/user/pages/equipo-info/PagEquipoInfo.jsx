@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -37,15 +37,15 @@ export const PagEquipoInfo = () => {
   const [loading, setLoading] = useState(true);
   const [modalActivacion, setModalActivacion] = useState(false);
 
-    // Obtener el último registro para mostrar los valores actuales
+  // Obtener el último registro para mostrar los valores actuales
   const getUltimoRegistro = () => {
     if (!registrosData || registrosData.length === 0) return null;
-    
+
     // Ordenar por fecha_hora descendente y tomar el primero
-    const registrosOrdenados = [...registrosData].sort((a, b) => 
+    const registrosOrdenados = [...registrosData].sort((a, b) =>
       new Date(b.fecha_hora) - new Date(a.fecha_hora)
     );
-    
+
     return registrosOrdenados[0];
   };
 
@@ -71,9 +71,8 @@ export const PagEquipoInfo = () => {
   };
 
   // Función para actualizar datos en tiempo real (sin loading)
-  const handleUpdateData = async () => {
-    if (loading) return; // No actualizar si todavía está cargando inicialmente
-
+  const handleUpdateData = useCallback(async () => {
+    if (loading) return;
     try {
       const equipo = await getEquipo(institucion, resonador);
       setEquipoData(equipo || {});
@@ -86,7 +85,8 @@ export const PagEquipoInfo = () => {
     } catch (error) {
       console.error("Error updating data:", error);
     }
-  };
+  }, [institucion, resonador, periodo,]);
+
 
   const handleOpenModal = () => setModalActivacion(true);
   const handleCloseModal = () => setModalActivacion(false);
@@ -97,19 +97,20 @@ export const PagEquipoInfo = () => {
 
   // Efecto para actualizaciones automáticas en tiempo real
   useEffect(() => {
+    const interval = setInterval(() => {
+      handleUpdateData();
+    }, 30000);
 
-    // Configurar intervalo para actualizaciones automáticas
-    const interval = setInterval(handleUpdateData, 60000); // 60 segundos
-
-    // Limpiar intervalo al desmontar el componente
     return () => clearInterval(interval);
-  }, [institucion, resonador]);
+  }, [institucion, resonador, periodo]);
+
 
 
   // Función para obtener los datos de la métrica seleccionada
   const getSelectedMetricData = () => {
     if (!processedData) return { data: [], yAxisName: '', seriesNames: [], colors: [], exportData: [] };
 
+    // En la función getSelectedMetricData, cambia esto:
     const metricConfig = {
       temp_linea_chiller: {
         data: [processedData.temp_linea_chiller],
@@ -131,6 +132,14 @@ export const PagEquipoInfo = () => {
         seriesNames: ['Flujo Chiller'],
         colors: ['#4ecdc4'],
         exportData: prepareExportData(processedData, 'flujo_chiller', ['Flujo Chiller (L/min)'])
+      },
+      // CORREGIDO: Cambiar de "flujo_auxiliar" a "flujo_linea_aux"
+      flujo_linea_aux: {
+        data: [processedData.flujo_linea_aux],
+        yAxisName: 'Flujo (L/min)',
+        seriesNames: ['Flujo Auxiliar'],
+        colors: ['#4ecdc4'],
+        exportData: prepareExportData(processedData, 'flujo_aux', ['Flujo Auxiliar (L/min)'])
       },
       corriente_chiller: {
         data: [processedData.corriente_chiller],
@@ -263,7 +272,7 @@ export const PagEquipoInfo = () => {
   const selectedMetricData = getSelectedMetricData();
   const selectedTempMetricData = getSelectedTempMetricData();
 
-  
+
   return (
     <Box sx={{ color: 'white' }}>
       <Box display={'flex'} justifyContent={'right'} flexDirection={{ xs: 'column', md: 'row' }} mb={3} gap={2}>
@@ -362,8 +371,8 @@ export const PagEquipoInfo = () => {
                 Estado Compresor
               </Typography>
               <Chip
-                label={ultimoRegistro.linea_principal === 1 ? "ON" : "OFF"}
-                color={ultimoRegistro.linea_principal === 1 ? "success" : "warning"}
+                label={ultimoRegistro.corriente_compresor > 0 ? "ON" : "OFF"}
+                color={ultimoRegistro.corriente_compresor > 0 ? "success" : "warning"}
                 size="small"
                 sx={{ my: 0.5 }}
               />
@@ -586,6 +595,7 @@ export const PagEquipoInfo = () => {
                 <MenuItem value="temp_linea_chiller">Temperatura Agua Chiller a Compresor</MenuItem>
                 <MenuItem value="temp_linea_aux">Temperatura Agua Auxiliar a Compresor</MenuItem>
                 <MenuItem value="flujo_chiller">Flujo Agua Chiller a Compresor</MenuItem>
+                <MenuItem value="flujo_linea_aux"> Flujo Agua Auxiliar a Compreso</MenuItem>
                 <MenuItem value="corriente_chiller">Corriente Consumida Chiller</MenuItem>
                 <MenuItem value="corriente_compresor">Corriente Consumida Compresor</MenuItem>
                 <MenuItem value="estado_linea_principal">Estado Línea Principal</MenuItem>
@@ -610,10 +620,10 @@ export const PagEquipoInfo = () => {
         <Paper sx={{ p: 2, bgcolor: 'transparent', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="h6" color="white">
-              Gráfica de Temperaturas
+              Gráfica de Métricas
             </Typography>
             <FormControl sx={{ minWidth: 250 }} size="small">
-              <InputLabel id="temp-metric-select-label" sx={{ color: 'white' }}>Seleccionar Temperatura</InputLabel>
+              <InputLabel id="temp-metric-select-label" sx={{ color: 'white' }}>Seleccionar Métrica</InputLabel>
               <Select
                 labelId="temp-metric-select-label"
                 value={selectedTempMetric}
