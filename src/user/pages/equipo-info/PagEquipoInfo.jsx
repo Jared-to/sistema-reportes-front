@@ -10,10 +10,12 @@ import {
   MenuItem,
   Chip,
   Button,
+  IconButton,
 } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DownloadIcon from '@mui/icons-material/Download';
+import Forward5Icon from '@mui/icons-material/Forward5';
 
 import { useSensoresStore } from "../../../hooks/useSensoresStore";
 import { ModalActivacion } from "./components/ModalActivacion";
@@ -72,7 +74,7 @@ export const PagEquipoInfo = () => {
 
   // Función para actualizar datos en tiempo real (sin loading)
   const handleUpdateData = useCallback(async () => {
-    if (loading) return;
+
     try {
       const equipo = await getEquipo(institucion, resonador);
       setEquipoData(equipo || {});
@@ -276,6 +278,11 @@ export const PagEquipoInfo = () => {
   return (
     <Box sx={{ color: 'white' }}>
       <Box display={'flex'} justifyContent={'right'} flexDirection={{ xs: 'column', md: 'row' }} mb={3} gap={2}>
+        <IconButton
+          onClick={() => handleUpdateData()}
+        >
+          <Forward5Icon sx={{ color: 'whitesmoke' }} />
+        </IconButton>
         <Button
           onClick={() => navigate(-1)}
           variant="contained"
