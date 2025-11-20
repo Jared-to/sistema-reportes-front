@@ -138,6 +138,16 @@ export const PagHome = () => {
     handleGetData();
   }, []);
 
+
+  // Efecto para actualizaciones automáticas en tiempo real
+  useEffect(() => {
+    const interval = setInterval(() => {
+      handleGetData();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <Box sx={{
       flexGrow: 1,

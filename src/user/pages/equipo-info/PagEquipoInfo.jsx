@@ -369,8 +369,8 @@ export const PagEquipoInfo = () => {
                 Estado Chiller
               </Typography>
               <Chip
-                label={ultimoRegistro.linea_principal === 1 ? "ON" : "OFF"}
-                color={ultimoRegistro.linea_principal === 1 ? "success" : "warning"}
+                label={ultimoRegistro.corriente_chiller >= 0 ? "ON" : "OFF"}
+                color={ultimoRegistro.corriente_chiller >= 0 ? "success" : "warning"}
                 size="small"
                 sx={{ my: 0.5 }}
               />
